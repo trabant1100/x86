@@ -1,2 +1,11 @@
 var opcodes = new Array(255);
+opcodes[0x8E] = 'MOV $reg,r/m16'
+opcodes[0xB8] = 'MOV AX,imm16';
+opcodes[0xB9] = 'MOV CX,imm16';
+opcodes[0xBA] = 'MOV DX,imm16';
+opcodes[0xBB] = 'MOV BX,imm16';
+opcodes[0xBC] = 'MOV SP,imm16';
+opcodes[0xBD] = 'MOV BP,imm16';
+opcodes[0xBE] = 'MOV SI,imm16';
+opcodes[0xBF] = 'MOV DI,imm16';
 opcodes[0xEA] = 'JMP ptr16:16';
