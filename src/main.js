@@ -17,7 +17,7 @@ function init() {
 	}
 		
 	function start() {
-		stepperId = setInterval(stepIn, 1000);
+		stepperId = setInterval(stepIn, 100);
 		console.info('PC started');
 	}
 	
