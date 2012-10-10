@@ -3,15 +3,18 @@ function init() {
 		domControlBtn = document.getElementById('control'),
 		db = new DataBase(loadBios),
 		running = domControlBtn.getAttribute('data-running') == 'true',
-		stepperId = null;
+		stepperId = null,
+		loopcount = 0;
 		
 	function stepIn() {
 		try {
 			cpu.stepIn();
+			loopcount ++;
 		} catch(e) {
 			pause();
 			domControlBtn.setAttribute('data-running', running = false);
 			domControlBtn.value = 'resume [ERROR]';
+			console.info('loopcount', loopcount);
 			throw e;
 		}
 	}

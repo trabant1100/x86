@@ -63,7 +63,7 @@ var cpu = (function() {
 			mem.write16ea(addr, val);
 			//throw 'Unsupported modrm mode ' + modrm_.mod;
 		} else {
-			regs[ireg[morm_.rm]] = val;
+			regs[ireg[modrm_.rm]] = val;
 			console.info('#28 warning - not sure!!!');
 		}
 	}
@@ -133,10 +133,13 @@ var cpu = (function() {
 		flags.pf = parity(val & 0xFF) ? 1 : 0;
 	}
 	
-	function flags16add(val1, val2) {
+	function flags16add(val1, val2, omitFlags) {
+		omitFlags = omitFlags || {};
 		val1 &= 0xFFFF; val2 &= 0xFFFF;
 		var res = val1 + val2;
-		flags.cf = (res & 0xFFFF0000) ? 1 : 0;
+		if(!omitFlags.cf) {
+			flags.cf = (res & 0xFFFF0000) ? 1 : 0;
+		}
 		flags.of = ((res ^ val1) & (res ^ val2) & 0x8000) == 0x8000 ? 1 : 0;
 		flags.af = ((val1 ^ val2 ^ res) & 0x10) == 0x10 ? 1 : 0;
 		flags.zf = res == 0 ? 1 : 0;
@@ -157,6 +160,77 @@ var cpu = (function() {
 	
 	function sign8ofs(val) {
 		return ((val & 0x80) * 0x1FE) | val;
+	}
+	
+	function shift(val, modrm_, cnt) {
+		var i = null, cf = null;
+		
+		switch(modrm_.reg) {
+		case 0: // ROL
+			for(i = 0; i < cnt; i ++) {
+				flags.cf = val & 0x8000 ? 1 : 0;
+				val = ((val << 1) | flags.cf) & 0xFFFF;
+			}
+			if(cnt == 1) flags.of = flags.cf ^ ((val >> 15) & 1);
+		break;
+		case 1: // ROR
+			for(i = 0; i < cnt; i ++) {
+				flags.cf = val & 1;
+				val = (val >>> 1) | (flags.cf << 15);
+			}
+			if(cnt == 1) flags.of = (val >> 15) ^ ((val >> 14) & 1);
+		break;
+		case 2: // RCL
+			for(i = 0; i < cnt; i ++) {
+				cf = flags.cf;
+				flags.cf = val & 0x8000 ? 1 : 0;
+				val = ((val << 1) | cf) & 0xFFFF;
+			}
+			if(cnt == 1) flags.of = flags.cf ^ ((val >> 15) & 1);
+		break;
+		case 3: // RCR
+			for(i = 0; i < cnt; i ++) {
+				cf = flags.cf;
+				flags.cf = val & 1;
+				val = (val >>> 1) | (cf << 15);
+			}
+			if(cnt == 1) flags.of = (val >> 15) ^ ((val >> 14) & 1);
+		break;
+		case 4: // SHL
+			for(i = 0; i < cnt; i ++) {
+				flags.cf = val & 0x8000 ? 1 : 0;
+				val = (val << 1) & 0xFFFF;
+			}
+			if(cnt == 1) flags.of = (val >> 15) == flags.cf ? 0 : 1;
+			flags.sf = val & 0x8000 ? 1 : 0;
+			flags.zf = val == 0 ? 1 : 0;
+			flags.pf = parity(val) ? 1 : 0;
+		break;
+		case 5: // SHR
+			if(cnt == 1) flags.of = val & 0x8000 ? 1 : 0;
+			for(i = 0; i < cnt; i ++) {
+				flags.cf = val & 1;
+				val = (val >>> 1);
+			}
+			flags.sf = val & 0x8000 ? 1 : 0;
+			flags.zf = val == 0 ? 1 : 0;
+			flags.pf = parity(val) ? 1 : 0;
+		break;
+		case 7: // SAR
+			for(i = 0; i < cnt; i ++) {
+				flags.cf = val & 1;
+				val = (val >> 1);
+			}
+			if(cnt == 1) flags.of = 0;
+			flags.sf = val & 0x8000 ? 1 : 0;
+			flags.zf = val == 0 ? 1 : 0;
+			flags.pf = parity(val) ? 1 : 0;
+		break;
+		default:
+			throw 'Unsupported shift for modrm reg=' + modrm_.reg;
+		}
+		
+		return val & 0xFFFF;
 	}
 
 	return {
@@ -204,9 +278,58 @@ var cpu = (function() {
 				flags16log(res);
 				regs[ireg[modrm_.reg]] = res;
 			break;
+			case 0x3D: // CMP AX,imm16
+				oper1 = regs.ax;
+				oper2 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
+				flags16sub(oper1, oper2);
+			break;
+			case 0x40: // INC AX
+				flags16add(regs.ax, 1, {cf: true});
+				regs.ax ++;
+			break;
+			case 0x41: // INC CX
+				flags16add(regs.cx, 1, {cf: true});
+				regs.cx ++;
+			break;
+			case 0x42: // INC DX
+				flags16add(regs.dx, 1, {cf: true});
+				regs.dx ++;
+			break;
+			case 0x43: // INC BX
+				flags16add(regs.bx, 1, {cf: true});
+				regs.bx ++;
+			break;
+			case 0x44: // INC SP
+				flags16add(regs.sp, 1, {cf: true});
+				regs.sp ++;
+			break;
+			case 0x45: // INC BP
+				flags16add(regs.bp, 1, {cf: true});
+				regs.bp ++;
+			break;
+			case 0x46: // INC SI
+				flags16add(regs.si, 1, {cf: true});
+				regs.si ++;
+			break;
+			case 0x47: // INC DI
+				flags16add(regs.di, 1, {cf: true});
+				regs.di ++;
+			break;
 			case 0x70: // JO rel8
 				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
 				if(flags.of) regs.ip += res;
+			break;
+			case 0x71: // JNO rel8
+				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+				if(!flags.of) regs.ip += res;
+			break;
+			case 0x72: // JC rel8
+				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+				if(flags.cf) regs.ip += res;
+			break;
+			case 0x73: // JNC rel8
+				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+				if(!flags.cf) regs.ip += rs;
 			break;
 			case 0x74: // JZ rel8
 				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
@@ -228,9 +351,13 @@ var cpu = (function() {
 				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
 				if(!flags.pf) regs.ip += res;
 			break;
-			case 0x72: // JC rel8
-				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
-				if(flags.cf) regs.ip += res;
+			case 0x8B: // MOV r16,r/m16
+				modrm_ = modrm();
+				regs[ireg[modrm_.reg]] = readrm16(modrm_, modrm_.rm);
+			break;
+			case 0x8C: // MOV r/m16,$reg
+				modrm_ = modrm();
+				writerm16(modrm_, regs[isreg[modrm_.reg]]);
 			break;
 			case 0x8E: // MOV $reg,r,m16
 				oper1 = modrm();
@@ -264,6 +391,11 @@ var cpu = (function() {
 				oper1 = modrm();
 				writerm16(oper1, mem.read16(regs.cs, regs.ip)); regs.ip += 2;
 			break;
+			case 0xD1: // RCL/SAL r/m16,1
+				modrm_ = modrm();
+				oper1 = readrm16(modrm_, modrm_.rm);
+				writerm16(modrm_, shift(oper1, modrm_, 1));
+			break
 			case 0xEA: // JMP ptr16:16
 				oper1 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
 				oper2 = mem.read16(regs.cs, regs.ip);
