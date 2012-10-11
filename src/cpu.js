@@ -1,20 +1,20 @@
 var cpu = (function() {
 	var regs = {
-		ax: null,
-		bx: null,
-		cx: null,
-		dx: null,
-		sp: null, 
-		bp: null,
-		si: null,
-		di: null,
-		es: null,
-		ds: null,
-		cs: null,
-		ss: null,
+		ax: 0,
+		bx: 0,
+		cx: 0,
+		dx: 0,
+		sp: 0, 
+		bp: 0,
+		si: 0,
+		di: 0,
+		es: 0,
+		ds: 0,
+		cs: 0,
+		ss: 0,
 		
-		ip: null,
-		sp: null
+		ip: 0,
+		sp: 0
 	};
 	
 	var flags = {
@@ -122,7 +122,7 @@ var cpu = (function() {
 	}
 	
 	function parity(val) {
-		return (val.toString(2).replace(/0/g, '').length % 2) == 0;
+		return ((val & 0xFF).toString(2).replace(/0/g, '').length % 2) == 0;
 	}
 	
 	function flags16log(val) {
@@ -151,7 +151,7 @@ var cpu = (function() {
 		val1 &= 0xFFFF; val2 &= 0xFFFF;
 		var res = val1 - val2;
 		flags.cf = val1 < val2 ? 1 : 0;
-		flags.of = ((res ^ val1) & (res ^ val2) & 0x8000) == 0x8000 ? 1 : 0;
+		flags.of = ((res ^ val1) & (val1 ^ val2) & 0x8000) == 0x8000 ? 1 : 0;
 		flags.af = ((val1 ^ val2 ^ res) & 0x10) == 0x10 ? 1 : 0;
 		flags.zf = res == 0 ? 1 : 0;
 		flags.sf = res & 0x8000 ? 1 : 0;
@@ -231,6 +231,59 @@ var cpu = (function() {
 		}
 		
 		return val & 0xFFFF;
+	}
+	
+	function muldiv(val, modrm_) {
+		var reg = modrm_.reg, tmp1 = null, tmp2 = null;
+		
+		switch(reg) {
+		case 0: // TEST
+			flags16log(val, mem.read16(regs.cs, regs.ip)); regs.ip += 2;
+		break;
+		case 2: // NOT
+			val = (~val) & 0xFFFF;
+		break;
+		case 3: // NEG
+			flags16sub(0, val);
+			val = ((~val) & 0xFFFF) + 1;	
+			flags.cf = val == 0 ? 0 : 1;
+		break;
+		case 4: // MUL
+			// TODO sanity check
+			if(val < 0 || regs.ax < 0)
+				throw 'value or ax for MUL is below ZERO!';
+			val *= regs.ax;
+			regs.ax = val & 0xFFFF;
+			regs.dx = (val >>> 16) & 0xFFFF;
+			flags.of = flags.cf = (regs.dx == 0) ? 0 : 1;
+			// TODO are flags: sf, zf, pf undefined ??
+		break;
+		case 5: // IMUL
+			tmp1 = val & 0xFFFF; tmp2 = regs.ax & 0xFFFF;
+			if(tmp1 & 0x8000) tmp1 |= 0xFFFF0000;
+			if(tmp2 & 0x8000) tmp2 |= 0xFFFF0000;
+			val = tmp1 * tmp2;
+			regs.ax = val & 0xFFFF;
+			regs.dx = (val >> 16) & 0xFFFF;
+			flags.of = flags.cf = (regs.dx == 0) ? 0 : 1;
+		break;
+		case 6: // DIV
+			if(val == 0) throw 'Unsupported CPU Exception: #DE Devide Error Exception';
+			tmp1 = (regs.dx << 16 >>> 0) + (regs.ax & 0xFFFF);
+			regs.ax = ~~(tmp1 / val);
+			regs.dx = tmp1 % val;
+		break;
+		case 7: // IDIV
+			if(val == 0) throw 'Unsupported CPU Exception: #DE Devide Error Exception';
+			tmp1 = (regs.dx << 15) + (regs.ax & 0xFFFF);
+			regs.ax = ~~(tmp1 / val);
+			regs.dx = tmp1 % val;
+		break;
+		default:
+			throw 'Unsupported muldiv for reg = ' + reg;
+		}
+		
+		return val;
 	}
 
 	return {
@@ -401,10 +454,32 @@ var cpu = (function() {
 				oper2 = mem.read16(regs.cs, regs.ip);
 				regs.ip = oper1; regs.cs = oper2;
 			break;
+			case 0xEB: // JMP rel8
+				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+				regs.ip += res;
+			break;
 			case 0xFA: // CLI
 				flags.if_ = 0;
 			break;
+			case 0xF7: // MUL/DIV r/m16
+				modrm_ = modrm();
+				oper1 = readrm16(modrm_, modrm_.rm);
+				res = muldiv(oper1, modrm_);
+				if(modrm_.reg > 1 && modrm_.reg < 4) writerm16(modrm_, res);
+			break;
 			}
+			
+			// DEBUG
+			var dbg = [
+			opcode.hex(2), 'ip='+regs.ip.hex(4), 
+			'ax='+regs.ax.hex(4), 'cx='+regs.cx.hex(4), 'dx='+regs.dx.hex(4), 'bx='+regs.bx.hex(4), 
+			'sp='+regs.sp.hex(4), 'bp='+regs.bp.hex(4), 'si='+regs.si.hex(4), 'di='+regs.di.hex(4),
+			'es='+regs.es.hex(4), 'cs='+regs.cs.hex(4), 'ss='+regs.ss.hex(4), 'ds='+regs.ds.hex(4),
+			'cf='+flags.cf, 'pf='+flags.pf, 'af='+flags.af, 'zf='+flags.zf, 'sf='+flags.sf, 
+			'tf='+flags.tf, 'if='+flags.if_, 'df='+flags.df, 'of='+flags.of, 'iopl='+flags.iopl,
+			'nt='+flags.nt 			
+			];
+			console.debug(dbg.join(' '));
 		}
 	}
 

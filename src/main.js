@@ -20,8 +20,13 @@ function init() {
 	}
 		
 	function start() {
-		stepperId = setInterval(stepIn, 100);
+		//stepperId = setInterval(stepIn, 100);
 		console.info('PC started');
+		stepperId = 1;
+		while(stepperId && loopcount < 100) {
+			stepIn();
+			console.info(loopcount);
+		}
 	}
 	
 	function pause() {

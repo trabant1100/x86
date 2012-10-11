@@ -34,4 +34,6 @@ opcodes[0xBF] = 'MOV DI,imm16';
 opcodes[0xC7] = 'MOV rm/16,imm16';
 opcodes[0xD1] = 'RCL/SAL r/m16,1';
 opcodes[0xEA] = 'JMP ptr16:16';
+opcodes[0xEB] = 'JMP rel8';
 opcodes[0xFA] = 'CLI';
+opcodes[0xF7] = 'MUL/DIV r/m16' ;

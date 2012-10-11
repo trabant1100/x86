@@ -1,5 +1,10 @@
-Number.prototype.hex = function() {
-	return '0x' + this.toString(16).toUpperCase();
+Number.prototype.hex = function(len) {
+	var str = this.toString(16).toUpperCase();
+	
+	if(len != null)
+		str = (Array(len).join('0') + str).slice(-len);
+	
+	return '0x' + str;
 }
 
 var utils = {
