@@ -15,7 +15,44 @@ var cpu = (function() {
 		
 		ip: 0,
 		sp: 0
-	};
+	},
+	regs8 = {
+		ah: function(val) {
+			if(val != null) regs.ax = (val << 8) + (regs.ax & 0xFF);
+			return ((regs.ax & 0xFF00) >>> 8);
+		},
+		al: function(val) {
+			if(val != null) regs.ax = (regs.ax & 0xFF00) + val;
+			return (regs.ax & 0xFF);
+		},
+		
+		ch: function(val) {
+			if(val != null) regs.cx = (val << 8) + (regs.cx & 0xFF);
+			return ((regs.cx & 0xFF00) >>> 8);
+		},
+		cl: function(val) {
+			if(val != null) regs.cx = (regs.cx & 0xFF00) + val;
+			return (regs.cx & 0xFF);
+		},
+		
+		dh: function(val) {
+			if(val != null) regs.dx = (val << 8) + (regs.dx & 0xFF);
+			return ((regs.dx & 0xFF00) >>> 8);
+		},
+		dl: function(val) {
+			if(val != null) regs.dx = (regs.dx & 0xFF00) + val;
+			return (regs.dx & 0xFF);
+		},
+		
+		bh: function(val) {
+			if(val != null) regs.bx = (val << 8) + (regs.bx & 0xFF);
+			return ((regs.bx & 0xFF00) >>> 8);
+		},
+		bl: function(val) {
+			if(val != null) regs.bx = (regs.bx & 0xFF00) + val;
+			return (regs.bx & 0xFF);
+		}
+	}
 	
 	var flags = {
 		cf: 0,
@@ -34,7 +71,7 @@ var cpu = (function() {
 		
 	var ireg = ['ax', 'cx', 'dx', 'bx', 'sp', 'bp', 'si', 'di'],
 		isreg = ['es', 'cs', 'ss', 'ds'];
-		
+			
 	function calcea(modrm_) {
 		var segm = null, offs = null;
 	
@@ -285,6 +322,10 @@ var cpu = (function() {
 		
 		return val;
 	}
+	
+	function outport(port, val) {
+		throw 'Unsupported port ' + port.hex() + ' with value ' + val;
+	}
 
 	return {
 		regs: regs,
@@ -330,6 +371,13 @@ var cpu = (function() {
 				res = oper1 ^ oper2;
 				flags16log(res);
 				regs[ireg[modrm_.reg]] = res;
+			break;
+			case 0x35: // XOR AX,imm16
+				oper1 = regs.ax;
+				oper2 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
+				res = oper1 ^ oper2;
+				flags16log(res);
+				regs.ax = res;
 			break;
 			case 0x3D: // CMP AX,imm16
 				oper1 = regs.ax;
@@ -416,6 +464,30 @@ var cpu = (function() {
 				oper1 = modrm();
 				regs[isreg[oper1.reg]] = regs[ireg[oper1.rm]];
 			break;
+			case 0xB0: // MOV AL,imm8
+				regs8.al(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB1: // MOV CL,imm8
+				regs8.cl(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB2: // MOV DL,imm8
+				regs8.dl(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB3: // MOV BL,imm8
+				regs8.bl(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB4: // MOV AH,imm8
+				regs8.ah(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB5: // MOV CH,imm8
+				regs8.ch(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB6: // MOV DH,imm8
+				regs8.dh(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
+			case 0xB7: // MOV BH,imm8
+				regs8.bh(mem.read8(regs.cs, regs.ip)); regs.ip ++;
+			break;
 			case 0xB8: // MOV AX,imm16
 				regs.ax = mem.read16(regs.cs, regs.ip); regs.ip += 2;
 			break;
@@ -448,7 +520,11 @@ var cpu = (function() {
 				modrm_ = modrm();
 				oper1 = readrm16(modrm_, modrm_.rm);
 				writerm16(modrm_, shift(oper1, modrm_, 1));
-			break
+			break;
+			case 0xE6: // OUT imm8,AL
+				oper1 = mem.read8(regs.cs, regs.ip); regs.ip ++;
+				outport(oper1, regs8.al());
+			break;
 			case 0xEA: // JMP ptr16:16
 				oper1 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
 				oper2 = mem.read16(regs.cs, regs.ip);
@@ -460,6 +536,9 @@ var cpu = (function() {
 			break;
 			case 0xFA: // CLI
 				flags.if_ = 0;
+			break;
+			case 0xFC: // CDF
+				flags.df = 0;
 			break;
 			case 0xF7: // MUL/DIV r/m16
 				modrm_ = modrm();
@@ -479,7 +558,7 @@ var cpu = (function() {
 			'tf='+flags.tf, 'if='+flags.if_, 'df='+flags.df, 'of='+flags.of, 'iopl='+flags.iopl,
 			'nt='+flags.nt 			
 			];
-			console.debug(dbg.join(' '));
+			//console.debug(dbg.join(' '));
 		}
 	}
 
