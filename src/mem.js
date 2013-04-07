@@ -61,6 +61,11 @@ var mem = (function() {
 		read16: function(seg, offs) {
 			return (read((seg << 4) + offs + 1) << 8) | (read((seg << 4) + offs));
 		},
+
+		read8ea: function(addr) {
+			addr &= 0xFFFFF;
+			return (read(addr) & 0xFF);
+		},
 		
 		read16ea: function(addr) {
 			addr &= 0xFFFFF;

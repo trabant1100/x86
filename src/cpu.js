@@ -70,6 +70,7 @@ var cpu = (function() {
 	}
 		
 	var ireg = ['ax', 'cx', 'dx', 'bx', 'sp', 'bp', 'si', 'di'],
+		ireg8 = ['al', 'cl', 'dl', 'bl', 'ah', 'ch', 'dh', 'bh'],
 		isreg = ['es', 'cs', 'ss', 'ds'];
 			
 	function calcea(modrm_) {
@@ -105,6 +106,16 @@ var cpu = (function() {
 		}
 	}
 	
+	function writerm8(modrm_, val) {
+		var addr = null;
+		if(modrm_.mod < 3) {
+			addr = calcea(modrm_);
+			mem.write8ea(addr, val);
+		} else {
+			regs8[ireg8[modrm_.rm]](val);
+		}
+	}
+	
 	function readrm16(modrm_, val) {
 		var addr = null;
 		if(modrm_.mod < 3) {
@@ -112,6 +123,16 @@ var cpu = (function() {
 			return mem.read16ea(addr);
 		} else {
 			return regs[ireg[val]];
+		}
+	}
+
+	function readrm8(modrm_, val) {
+		var addr = null;
+		if(modrm_.mod < 3) {
+			addr = calcea(modrm_);
+			return mem.read8ea(addr);
+		} else {
+			return regs8[ireg8[val]]();
 		}
 	}
 	
@@ -181,6 +202,20 @@ var cpu = (function() {
 		flags.af = ((val1 ^ val2 ^ res) & 0x10) == 0x10 ? 1 : 0;
 		flags.zf = res == 0 ? 1 : 0;
 		flags.sf = res & 0x8000 ? 1 : 0;
+		flags.pf = parity(res) ? 1 : 0;
+	}
+	
+	function flags8add(val1, val2, omitFlags) {
+		omitFlags = omitFlags || {};
+		val1 &= 0xFF; val2 &= 0xFF;
+		var res = val1 + val2;
+		if(!omitFlags.cf) {
+			flags.cf = (res & 0xFF00) ? 1 : 0;
+		}
+		flags.of = ((res ^ val1) & (res ^ val2) & 0x80) == 0x80 ? 1 : 0;
+		flags.af = ((val1 ^ val2 ^ res) & 0x10) == 0x10 ? 1 : 0;
+		flags.zf = res == 0 ? 1 : 0;
+		flags.sf = res & 0x80 ? 1 : 0;
 		flags.pf = parity(res) ? 1 : 0;
 	}
 	
@@ -324,7 +359,19 @@ var cpu = (function() {
 	}
 	
 	function outport(port, val) {
-		throw 'Unsupported port ' + port.hex() + ' with value ' + val;
+		switch(port) {
+			case 0xA0:
+				pic.outport(port, val);
+			break;
+			case 0x3B8:
+				hercules.outport(port, val);
+			break;
+			case 0x3D8:
+				cga.outport(port, val);
+			break;
+			default:
+				throw 'Unsupported port ' + port.hex() + ' with value ' + val;
+		}
 	}
 
 	return {
@@ -534,11 +581,27 @@ var cpu = (function() {
 				res = sign8ofs(mem.read8(regs.cs, regs.ip)); regs.ip ++;
 				regs.ip += res;
 			break;
+			case 0xEE: // OUT DX,AL
+				outport(regs.dx, regs8.al());
+			break;
 			case 0xFA: // CLI
 				flags.if_ = 0;
 			break;
 			case 0xFC: // CDF
 				flags.df = 0;
+			break;
+			case 0xFE: // INC/DEC r/m8
+				modrm_ = modrm();
+				oper1 = readrm8(modrm_, modrm_.rm);
+				if(modrm_.reg == 0) {
+					// INC
+					res = oper1 + 1;
+					flags8add(oper1, 1, {cf: true});
+				} else {
+					// DEC
+					throw 'TUTAJ!!!';
+				}
+				writerm8(modrm_, res);
 			break;
 			case 0xF7: // MUL/DIV r/m16
 				modrm_ = modrm();
