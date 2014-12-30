@@ -1,0 +1,30 @@
+{
+  "name": "x86",
+  "version": "1.0.0",
+  "description": "Take the Future",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bower": "^1.3.12"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "postinstall": "node_modules/.bin/bower install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trabant1100/x86.git"
+  },
+  "keywords": [
+    "x86"
+  ],
+  "author": "Kamil Omelańczuk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trabant1100/x86/issues"
+  },
+  "homepage": "https://github.com/trabant1100/x86"
+}

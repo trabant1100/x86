@@ -1,0 +1,5 @@
+/node_modules/
+/bower_components/
+/npm-debug.log
+/x86.sublime-workspace
+/x86.sublime-project

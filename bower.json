@@ -1,0 +1,23 @@
+{
+  "name": "x86",
+  "version": "1.0.0",
+  "description": "Take the Future",
+  "keywords": [
+    "x86"
+  ],
+  "authors": [
+    "Kamil Omelańczuk"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "localforage": "~1.2.0"
+  }
+}
