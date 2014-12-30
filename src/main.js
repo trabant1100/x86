@@ -1,7 +1,7 @@
 function init() {
 	var domBiosInput = document.getElementById('bios'),
 		domControlBtn = document.getElementById('control'),
-		db = new DataBase(loadBios),
+		db = new DataBase(),
 		running = domControlBtn.getAttribute('data-running') == 'true',
 		stepperId = null,
 		loopcount = 0;
@@ -39,9 +39,7 @@ function init() {
 		
 	function loadBios() {
 		console.info('loading bios');
-		db.get('bios', function(event) {
-			var data = event.target.result;
-			//console.info(event.target.result);
+		db.get('bios', function(data) {
 			console.info('bios loaded');
 			mem.write(0xFE000, data);
 			cpu.reset();
@@ -55,6 +53,7 @@ function init() {
 		
 		fileReader.onload = function(event) {
 			db.put('bios', event.target.result);
+			loadBios();
 		};
 		fileReader.readAsBinaryString(file);
 				
@@ -69,6 +68,7 @@ function init() {
 		}
 		this.value = running ? 'pause' : 'play';	
 	});
+	loadBios();
 }
 
 init();
