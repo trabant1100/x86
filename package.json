@@ -11,7 +11,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "postinstall": "node_modules/.bin/bower install",
+    "postinstall": "node node_modules/.bin/bower install --config.interactive=false",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
