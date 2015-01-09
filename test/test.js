@@ -1,6 +1,5 @@
 var assert = require('assert'),
-	fs = require('fs'),
-	io = require('socket.io-client');
+	fs = require('fs');
 
 var bios = null;
 
