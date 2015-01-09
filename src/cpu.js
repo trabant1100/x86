@@ -626,3 +626,7 @@ var cpu = (function() {
 	}
 
 })();
+
+for(var key in cpu) {
+	exports[key] = cpu[key];
+}

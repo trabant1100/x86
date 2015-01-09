@@ -41,7 +41,7 @@ var mem = (function() {
 			for(i = 0, len = data.length; i < len; i ++) {
 				if(addr + i > ram.length)
 					throw 'End of memory';
-				ram[addr + i] = data[i].charCodeAt(0);
+				ram[addr + i] = (data[i] + '').charCodeAt(0);
 			}
 		},
 		
@@ -73,3 +73,7 @@ var mem = (function() {
 		}
 	}
 })();
+
+for(var key in mem) {
+	exports[key] = mem[key];
+}
