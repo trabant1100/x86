@@ -47,3 +47,5 @@ opcodes[0xFC] = 'CDF';
 opcodes[0xFA] = 'CLI';
 opcodes[0xFE] = 'INC/DEC r/m8';
 opcodes[0xF7] = 'MUL/DIV r/m16' ;
+
+exports.opcodes = opcodes;

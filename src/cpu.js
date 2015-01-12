@@ -1,3 +1,8 @@
+var mem = require('./mem'),
+	opcodes = require('./opcodes').opcodes;
+
+Number.prototype.hex = require('./utils').Number.prototype.hex;
+
 var cpu = (function() {
 	var regs = {
 		ax: 0,
@@ -391,6 +396,7 @@ var cpu = (function() {
 			regs.cs = regs.cs & 0xFFFF; regs.ip = regs.ip & 0xFFFF;
 			
 			var opcode = mem.read8(regs.cs, regs.ip);
+			console.info(opcode, regs.ip);
 			regs.ip ++;
 			if(opcodes[opcode] == null) {
 				throw 'Unsupported opcode ' + opcode.hex();

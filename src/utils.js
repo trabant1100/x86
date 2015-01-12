@@ -12,3 +12,9 @@ var utils = {
 		return '0x' + Number(str.charCodeAt(0)).toString(16).toUpperCase();
 	}
 }
+
+exports.Number = {
+	prototype: {
+		hex: Number.prototype.hex
+	}
+}
