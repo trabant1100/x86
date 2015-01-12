@@ -44,8 +44,8 @@ describe('x86', function() {
 		readBios('./test/xtbios.bin').then(function(buf) {
 			bios = buf;
 			return readAsserts('./test/asserts.csv');
-		}).then(function(ass) {
-			// console.info(ass);
+		}).then(function(assertions) {
+			ass = assertions;
 			done();
 		});
 	});
@@ -53,6 +53,9 @@ describe('x86', function() {
 	describe('x86 test', function() {
 		it('get bios data', function() {
 			assert.equal(true, bios != null);
+		});
+		it('get csv test data assertions', function() {
+			assert.equal(true, ass != null);
 		});
 		it('write bios into memory', function() {
 			x86.mem.write(0xFE000, bios);
