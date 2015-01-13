@@ -1,7 +1,9 @@
-var mem = require('./mem'),
-	opcodes = require('./opcodes').opcodes;
+if(typeof window == 'undefined') {
+	var mem = require('./mem'),
+		opcodes = require('./opcodes').opcodes;
+	Number.prototype.hex = require('./utils').Number.prototype.hex;
+}
 
-Number.prototype.hex = require('./utils').Number.prototype.hex;
 
 var cpu = (function() {
 	var regs = {
@@ -399,7 +401,7 @@ var cpu = (function() {
 			console.info(opcode, regs.ip);
 			regs.ip ++;
 			if(opcodes[opcode] == null) {
-				throw 'Unsupported opcode ' + opcode.hex();
+				throw 'Unsupported opcode ' + opcode.hex() + ' at ip ' + regs.ip;
 			}
 			console.warn('opcode: ', opcodes[opcode], regs.cs.hex(), regs.ip.hex());
 			
