@@ -41,7 +41,13 @@ var mem = (function() {
 			for(i = 0, len = data.length; i < len; i ++) {
 				if(addr + i > ram.length)
 					throw 'End of memory';
-				ram[addr + i] = (data[i] + '').charCodeAt(0);
+
+				if (typeof data[i] == 'number')
+					ram[addr + i] = data[i];
+				else if(typeof data[i] == 'string')
+					ram[addr + i] = data[i].charCodeAt(0);
+				else
+					throw 'Unsupported mem write type: ' + (typeof data[i]);
 			}
 		},
 		
