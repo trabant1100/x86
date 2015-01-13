@@ -27,7 +27,7 @@ describe('x86', function() {
 				var parser = csv.parse(), ass = [];
 
 				try {
-					readStream.pipe(csv.parse({delimiter: '\t', columns: true, auto_parse: true}))
+					readStream.pipe(csv.parse({delimiter: ';', columns: true, auto_parse: true}))
 						.pipe(csv.transform(function(record) {
 							ass.push(_.mapValues(record, function(value) {
 								return value === '' ? null : value;
@@ -65,18 +65,23 @@ describe('x86', function() {
 		it('test opcodes', function() {
 			x86.cpu.reset();
 			x86.mem.write(0xFE000, bios);
-			var assIdx = 0;
-			while(true) {
+			var assIdx = 0,
+				cpuCount = 0;
+			while(assIdx < 1) {
 				x86.cpu.stepIn();
-				if(x86.cpu.ip === ass[assIdx]) {
-					it(ass[assIdx].opcode, function() {
-						for(var key in ass[assIdx]) {
-							if(ass[assIdx][key] != null && x86.cpu.regs[key] != null) {
-								assert.equal(x86.cpu.regs[key], ass[assIdx][key]);
-							}
+				if(cpuCount === ass[assIdx].cpu) {
+					var curAss = ass[assIdx];
+					
+					for(var key in curAss) {
+						if(curAss[key] != null && x86.cpu.regs[key] != null) {
+							assert.equal(x86.cpu.regs[key], curAss[key], 
+								key + ', ' + x86.cpu.regs[key] + ', ' + curAss[key]);
 						}
-					});
+					}
+					
+					assIdx ++;
 				}
+				cpuCount ++;
 			}
 		})
 	});

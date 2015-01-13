@@ -1,2 +1,2 @@
-src_ip	opcode	ax	bx	cx	dx	sp	bp	si	di	es	ds	cs	ss	ip	sp
-1	JMP ptr16:16											61440		57435	
+cpu;opcode;ax;bx;cx;dx;sp;bp;si;di;es;ds;cs;ss;ip;sp
+1;JMP ptr16:16;;;;;;;;;;;61440;;57438;
