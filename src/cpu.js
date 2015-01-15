@@ -1,6 +1,9 @@
 if(typeof window == 'undefined') {
 	var mem = require('./mem'),
-		opcodes = require('./opcodes').opcodes;
+		opcodes = require('./opcodes').opcodes,
+		pic = require('./pic'),
+		cga = require('./cga'),
+		hercules = require('./hercules');
 	Number.prototype.hex = require('./utils').Number.prototype.hex;
 }
 
@@ -368,6 +371,22 @@ var cpu = (function() {
 	
 	function outport(port, val) {
 		switch(port) {
+			case 0x40:
+			case 0x41:
+			case 0x42:
+			case 0x43:
+				pit.outport(port, val);			
+			break;
+			case 0x61:
+			case 0x63:
+				console.info('[Intel 8255] ignoring port ' + port.hex() + ' with value ' + val);
+			break;
+			case 0x80: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
+			case 0x08: case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+			case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+			case 0x88: case 0x89: 
+				dma.outport(port, val);
+			break;
 			case 0xA0:
 				pic.outport(port, val);
 			break;

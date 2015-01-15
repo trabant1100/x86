@@ -7,6 +7,10 @@ Number.prototype.hex = function(len) {
 	return '0x' + str;
 }
 
+String.prototype.bin = function() {
+	return parseInt(this.replace('b', ''), 2);
+}
+
 var utils = {
 	toHex: function(str) {
 		return '0x' + Number(str.charCodeAt(0)).toString(16).toUpperCase();
@@ -15,6 +19,7 @@ var utils = {
 
 exports.Number = {
 	prototype: {
-		hex: Number.prototype.hex
+		hex: Number.prototype.hex,
+		bin: Number.prototype.bin
 	}
 }

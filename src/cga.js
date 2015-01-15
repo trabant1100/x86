@@ -11,3 +11,7 @@ var cga = (function() {
 		}
 	}
 })();
+
+for(var key in cga) {
+	exports[key] = cga[key];
+}

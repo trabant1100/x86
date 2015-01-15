@@ -22,3 +22,7 @@ var hercules = (function() {
 		}
 	}
 })();
+
+for(var key in hercules) {
+	exports[key] = hercules[key];
+}
