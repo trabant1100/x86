@@ -6,6 +6,7 @@ if(typeof window == 'undefined') {
 
 
 var cpu = (function() {
+	var loopcount = 0;
 	var regs = {
 		ax: 0,
 		bx: 0,
@@ -388,9 +389,11 @@ var cpu = (function() {
 			regs.cs = 0xFFFF;
 			regs.ip = 0;
 			regs.sp = 0xFFFE;
+			loopcount = 0;
 		},
 				
 		stepIn: function() {
+			loopcount ++;
 			// temp vars
 			var oper1, oper2, modrm_, res;
 		
@@ -398,7 +401,7 @@ var cpu = (function() {
 			regs.cs = regs.cs & 0xFFFF; regs.ip = regs.ip & 0xFFFF;
 			
 			var opcode = mem.read8(regs.cs, regs.ip);
-			console.info(opcode, regs.ip);
+			console.info(loopcount, opcode, regs.ip);
 			regs.ip ++;
 			if(opcodes[opcode] == null) {
 				throw 'Unsupported opcode ' + opcode.hex() + ' at ip ' + regs.ip;
