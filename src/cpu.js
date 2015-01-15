@@ -618,6 +618,9 @@ var cpu = (function() {
 				if(modrm_.reg > 1 && modrm_.reg < 4) writerm16(modrm_, res);
 			break;
 			}
+
+			// wrap around 16bits
+			regs.ip &= 0xFFFF;
 			
 			// DEBUG
 			var dbg = [
