@@ -52,3 +52,7 @@ pit.OPERATING_MODE = ['Mode 0 (interrupt on terminal count)',
 	'Mode 5 (hardware triggered strobe)', 'Mode 2 (rate generator) BIS',
 	'Mode 3 (square wave generator) BIS'];
 pit.BINARY_MODE = ['16-bit binary', 'four-digit BCD'];
+
+for(var key in pit) {
+	exports[key] = pit[key];
+}

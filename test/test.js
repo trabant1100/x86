@@ -67,7 +67,7 @@ describe('x86', function() {
 			x86.mem.write(0xFE000, bios);
 			var assIdx = 0,
 				cpuCount = 0;
-			while(assIdx < 32) {
+			while(assIdx < 37) {
 				x86.cpu.stepIn();
 				cpuCount ++;
 				if(cpuCount === ass[assIdx].cpu) {

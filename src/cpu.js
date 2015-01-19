@@ -2,7 +2,9 @@ if(typeof window == 'undefined') {
 	var mem = require('./mem'),
 		opcodes = require('./opcodes').opcodes,
 		pic = require('./pic'),
+		pit = require('./pit'),
 		cga = require('./cga'),
+		dma = require('./dma'),
 		hercules = require('./hercules');
 	Number.prototype.hex = require('./utils').Number.prototype.hex;
 }

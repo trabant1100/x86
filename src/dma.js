@@ -40,3 +40,7 @@ var dma = (function() {
 		}
 	}
 })();
+
+for(var key in dma) {
+	exports[key] = dma[key];
+}
