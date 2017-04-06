@@ -3,7 +3,14 @@ language: node_js
 node_js:
   - 5.1.1
 
+env:
+  # Set environment variable for test results output
+  - XUNIT_FILE=shippable/testresults/result.xml
+
 build:
   ci:
+    #Create folders for test and code coverage
+    - mkdir -p shippable/testresults
+    
     - npm install
     - npm test
