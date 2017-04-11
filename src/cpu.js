@@ -381,6 +381,7 @@ var cpu = (function() {
 			break;
 			case 0x61:
 			case 0x63:
+			case 0x213:
 				console.info('[Intel 8255] ignoring port ' + port.hex() + ' with value ' + val);
 			break;
 			case 0x80: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
