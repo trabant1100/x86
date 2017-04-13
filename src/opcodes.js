@@ -1,5 +1,6 @@
 var opcodes = new Array(255);
 opcodes[0x05] = 'ADD AX,imm16';
+opcodes[0x26] = 'PREFIX ES segment override';
 opcodes[0x2D] = 'SUB AX,imm16';
 opcodes[0x33] = 'XOR r16,r/m16';
 opcodes[0x35] = 'XOR AX,imm16';
