@@ -417,7 +417,7 @@ var cpu = (function() {
 		stepIn: function() {
 			loopcount ++;
 			// temp vars
-			var oper1, oper2, modrm_, res;
+			var oper1, oper2, modrm_, res, segovr;
 		
 			// wrap around to 16bit
 			regs.cs = regs.cs & 0xFFFF; regs.ip = regs.ip & 0xFFFF;
@@ -437,6 +437,9 @@ var cpu = (function() {
 				flags16add(regs.ax, oper2);
 				regs.ax += oper2;
 				regs.ax &= 0xFFFF;
+			break;
+			case 0x26: // ES segment override
+				segovr = 0x26; regs.ip ++;
 			break;
 			case 0x2D: // SUB AX,imm16
 				oper2 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
