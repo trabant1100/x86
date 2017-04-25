@@ -12,6 +12,7 @@ if(typeof window == 'undefined') {
 
 var cpu = (function() {
 	var loopcount = 0;
+	var debug = {};
 	var regs = {
 		ax: 0,
 		bx: 0,
@@ -406,6 +407,8 @@ var cpu = (function() {
 
 	return {
 		regs: regs,
+
+		debug: debug,
 		
 		reset: function() {
 			regs.cs = 0xFFFF;
@@ -428,6 +431,7 @@ var cpu = (function() {
 			if(opcodes[opcode] == null) {
 				throw 'Unsupported opcode ' + opcode.hex() + ' at ip ' + regs.ip;
 			}
+			debug.opcode = opcode;
 			console.warn('opcode: ', opcodes[opcode], regs.cs.hex(), regs.ip.hex());
 			
 			// main opcode resolver

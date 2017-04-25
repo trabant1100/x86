@@ -3,7 +3,8 @@ var _ = require('lodash'),
 	fs = require('fs'),
 	csv = require('csv'),
 	Promise = require('promise'),
-	x86 = require('../src/x86');
+	x86 = require('../src/x86'),
+	opcodes = require('../src/opcodes').opcodes;
 
 var bios = null,
 	ass = null;
@@ -66,7 +67,8 @@ describe('x86', function() {
 			x86.cpu.reset();
 			x86.mem.write(0xFE000, bios);
 			var assIdx = 0,
-				cpuCount = 0;
+				cpuCount = 0,
+				opcode = null;
 			while(assIdx < 37) {
 				x86.cpu.stepIn();
 				cpuCount ++;
@@ -75,8 +77,9 @@ describe('x86', function() {
 					
 					for(var key in curAss) {
 						if(curAss[key] != null && x86.cpu.regs[key] != null) {
+							opcode = opcodes[x86.cpu.debug.opcode];
 							assert.equal(x86.cpu.regs[key], curAss[key], 
-								'#' + cpuCount + ', ' + key + ', ' + x86.cpu.regs[key] + ', ' + curAss[key]);
+								opcode + ', ' + '#' + cpuCount + ', ' + key + ', ' + x86.cpu.regs[key] + ', ' + curAss[key]);
 						}
 					}
 					

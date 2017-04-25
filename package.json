@@ -12,13 +12,14 @@
     "csv": "^0.4.1",
     "lodash": "^2.4.1",
     "mocha": "^2.1.0",
+    "mocha-multi": "^0.11.0",
     "promise": "^6.0.1",
     "xunit-file": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {
     "postinstall": "node_modules/.bin/bower install --config.interactive=false",
-    "test": "node_modules/.bin/mocha test -R xunit-file"
+    "test": "node_modules/.bin/mocha test -R mocha-multi --reporter-options spec=-,xunit-file=-"
   },
   "repository": {
     "type": "git",
