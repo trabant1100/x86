@@ -13,13 +13,18 @@
     "lodash": "^2.4.1",
     "mocha": "^2.1.0",
     "mocha-multi": "^0.11.0",
+    "npm-watch": "^0.1.9",
     "promise": "^6.0.1",
     "xunit-file": "^1.0.0"
   },
   "devDependencies": {},
+  "watch": {
+    "test": "{src,test}/*.js"
+  },
   "scripts": {
     "postinstall": "node_modules/.bin/bower install --config.interactive=false",
-    "test": "node_modules/.bin/mocha test -R mocha-multi --reporter-options spec=-,xunit-file=-"
+    "test": "node_modules/.bin/mocha test -R mocha-multi --reporter-options spec=-,xunit-file=-",
+    "watch": "npm-watch"
   },
   "repository": {
     "type": "git",
