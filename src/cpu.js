@@ -150,20 +150,21 @@ var cpu = (function() {
 		}
 	}
 	
-	function modrm() {
+	function modrm(segovr) {
 		var byt = mem.read8(regs.cs, regs.ip); regs.ip ++;
 		var mod = byt >> 6, 
 			reg = (byt >> 3) & 7, // 7 = 00 111b 
 			rm = byt & 7; // 7 = 00 000 111b 
 		var disp16 = 0;
-		
+		var segreg = segovr || 'cs';
+
 		switch(mod) {
 		// rm is memory address
 		case 0:
 			//throw 'Unsupported modrm mode ' + mod;			
 			if(rm == 6) { // 6 = 110b
 				// word displacement
-				disp16 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
+				disp16 = mem.read16(regs[segreg], regs.ip); regs.ip += 2;
 			} else if(rm == 2 || rm == 3) {
 				throw 'Unsupported modrm mode ' + mod + ', rm ' + rm;
 			}
@@ -442,8 +443,17 @@ var cpu = (function() {
 				regs.ax += oper2;
 				regs.ax &= 0xFFFF;
 			break;
+			case 0x21: // AND r/m16,r16
+				modrm_ = modrm(segovr);
+				oper1 = readrm16(modrm_, modrm_.rm);
+				oper2 = regs[ireg[modrm_.reg]];
+				res = oper1 & oper2;
+				flags16log(res);
+				writerm16(modrm_, regs[isreg[modrm_.reg]]);
+			break;
 			case 0x26: // ES segment override
-				segovr = 0x26; regs.ip ++;
+				segovr = 'es'; regs.ip += 2;
+				console.warn('Next opcode', mem.read8(regs.cs, regs.ip), opcodes[mem.read8(regs.cs, regs.ip)])
 			break;
 			case 0x2D: // SUB AX,imm16
 				oper2 = mem.read16(regs.cs, regs.ip); regs.ip += 2;
@@ -452,7 +462,7 @@ var cpu = (function() {
 				regs.ax &= 0xFFFF;
 			break;
 			case 0x33: // XOR r16,r/m16
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				oper1 = regs[ireg[modrm_.reg]];
 				oper2 = readrm16(modrm_, modrm_.rm);
 				res = oper1 ^ oper2;
@@ -540,15 +550,15 @@ var cpu = (function() {
 				if(!flags.pf) regs.ip += res;
 			break;
 			case 0x8B: // MOV r16,r/m16
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				regs[ireg[modrm_.reg]] = readrm16(modrm_, modrm_.rm);
 			break;
 			case 0x8C: // MOV r/m16,$reg
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				writerm16(modrm_, regs[isreg[modrm_.reg]]);
 			break;
 			case 0x8E: // MOV $reg,r,m16
-				oper1 = modrm();
+				oper1 = modrm(segovr);
 				regs[isreg[oper1.reg]] = regs[ireg[oper1.rm]];
 			break;
 			case 0xB0: // MOV AL,imm8
@@ -600,11 +610,11 @@ var cpu = (function() {
 				regs.di = mem.read16(regs.cs, regs.ip); regs.ip += 2;
 			break;
 			case 0xC7: // MOV r/m16,imm16
-				oper1 = modrm();
+				oper1 = modrm(segovr);
 				writerm16(oper1, mem.read16(regs.cs, regs.ip)); regs.ip += 2;
 			break;
 			case 0xD1: // RCL/SAL r/m16,1
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				oper1 = readrm16(modrm_, modrm_.rm);
 				writerm16(modrm_, shift(oper1, modrm_, 1));
 			break;
@@ -631,7 +641,7 @@ var cpu = (function() {
 				flags.df = 0;
 			break;
 			case 0xFE: // INC/DEC r/m8
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				oper1 = readrm8(modrm_, modrm_.rm);
 				if(modrm_.reg == 0) {
 					// INC
@@ -644,7 +654,7 @@ var cpu = (function() {
 				writerm8(modrm_, res);
 			break;
 			case 0xF7: // MUL/DIV r/m16
-				modrm_ = modrm();
+				modrm_ = modrm(segovr);
 				oper1 = readrm16(modrm_, modrm_.rm);
 				res = muldiv(oper1, modrm_);
 				if(modrm_.reg > 1 && modrm_.reg < 4) writerm16(modrm_, res);
