@@ -1,5 +1,6 @@
 var _ = require('lodash'),
 	assert = require('assert'),
+	assertinfo = require('./assertinfo'),
 	fs = require('fs'),
 	csv = require('csv'),
 	Promise = require('promise'),
@@ -78,7 +79,7 @@ describe('x86', function() {
 					for(var key in curAss) {
 						if(curAss[key] != null && x86.cpu.regs[key] != null) {
 							opcode = opcodes[x86.cpu.debug.opcode];
-							assert.equal(x86.cpu.regs[key], curAss[key], 
+							assertinfo.equal(x86.cpu.regs[key], curAss[key], 
 								opcode + ', ' + '#' + cpuCount + ', ' + key + ', ' + x86.cpu.regs[key] + ', ' + curAss[key]);
 						}
 					}
